@@ -8,11 +8,9 @@ df_pg = pd.read_sql("SELECT * FROM events", engine)
 mongo_db = get_mongo_db()
 df_mongo = pd.DataFrame(list(mongo_db.events.find()))
 
-# PRE PROCESS
 df_pg['timestamp'] = pd.to_datetime(df_pg['timestamp'])
 df_mongo['timestamp'] = pd.to_datetime(df_mongo['timestamp'])
 
-# Streamlit dashboard
 st.title("Product Analytics Dashboard")
 
 # Now filters
@@ -26,9 +24,29 @@ filtered_df = df_pg[
     (df_pg['timestamp'].dt.date >= start_date) &
     (df_pg['timestamp'].dt.date <= end_date) &
     (df_pg['feature'].isin(selected_feature))
-]
+    ]
 
-if success_filter != "ALL":
-    filtered_df = filtered_df[filtered_df['succes'] == (success_filter == "True")]
+if success_filter == "True":
+    filtered_df = filtered_df[filtered_df['succes'] == True]
+elif success_filter == "False":
+    filtered_df = filtered_df[filtered_df['succes'] == False]
 
-# Feature adoption (bar chart)
+# Events over time
+st.header("Events over time")
+filtered_df['timestamp'] = pd.to_datetime(filtered_df['timestamp'])
+filtered_df['day_month'] = filtered_df['timestamp'].dt.strftime('%d %b')  # e.g. 03 Nov
+filtered_df['date_only'] = filtered_df['timestamp'].dt.date  # we need it to sort the date
+
+events_by_time = filtered_df.groupby(['date_only', 'day_month']).size().reset_index(name='count')
+events_by_time = events_by_time.sort_values('date_only')
+
+st.line_chart(events_by_time.set_index('day_month')['count'])
+
+
+# Avg latency / feature
+st.header("Average latency by feature")
+average_latency_by_feature = filtered_df.groupby('feature')['latency_ms'].mean().reset_index()
+st.bar_chart(average_latency_by_feature.set_index('feature')['latency_ms'])
+st.write(average_latency_by_feature)
+
+# Latency over time
