@@ -31,17 +31,24 @@ if success_filter == "True":
 elif success_filter == "False":
     filtered_df = filtered_df[filtered_df['succes'] == False]
 
+filtered_df['day'] = filtered_df['timestamp'].dt.strftime('%d %b') # e.g. 03 Nov
+
+# Logins every day
+st.header("Logins every day")
+logins_df = filtered_df[filtered_df['event'] == "user_login"]
+logins_df['day'] = logins_df['timestamp'].dt.strftime('%d %b')
+logins_by_day = logins_df.groupby('day').size().reset_index(name='count_by_day')
+st.line_chart(logins_by_day.set_index('day')['count_by_day'])
+
 # Events over time
 st.header("Events over time")
 filtered_df['timestamp'] = pd.to_datetime(filtered_df['timestamp'])
-filtered_df['day_month'] = filtered_df['timestamp'].dt.strftime('%d %b')  # e.g. 03 Nov
 filtered_df['date_only'] = filtered_df['timestamp'].dt.date  # we need it to sort the date
 
-events_by_time = filtered_df.groupby(['date_only', 'day_month']).size().reset_index(name='count')
+events_by_time = filtered_df.groupby(['date_only', 'day']).size().reset_index(name='count')
 events_by_time = events_by_time.sort_values('date_only')
 
-st.line_chart(events_by_time.set_index('day_month')['count'])
-
+st.line_chart(events_by_time.set_index('day')['count'])
 
 # Avg latency / feature
 st.header("Average latency by feature")
@@ -50,3 +57,7 @@ st.bar_chart(average_latency_by_feature.set_index('feature')['latency_ms'])
 st.write(average_latency_by_feature)
 
 # Latency over time
+st.header("Average latency by day")
+
+latency_over_time = filtered_df.groupby('day')['latency_ms'].mean()
+st.line_chart(latency_over_time)
