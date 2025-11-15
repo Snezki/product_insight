@@ -33,6 +33,11 @@ elif success_filter == "False":
 
 filtered_df['day'] = filtered_df['timestamp'].dt.strftime('%d %b') # e.g. 03 Nov
 
+# Daily users
+st.header("Daily users")
+daily_users = filtered_df.groupby('day')['user_id'].nunique().reset_index(name='unique_users').sort_values('day')
+st.bar_chart(daily_users.set_index('day')['unique_users'])
+
 # Logins every day
 st.header("Logins every day")
 logins_df = filtered_df[filtered_df['event'] == "user_login"]
