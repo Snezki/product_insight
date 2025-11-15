@@ -2,7 +2,7 @@ version: "3.8"
 services:
   postgres:
     image: postgres:15
-    container_name: ai_postgres
+    container_name: insight_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -14,7 +14,7 @@ services:
 
   mongo:
     image: mongo:6
-    container_name: ai_mongo
+    container_name: insight_mongo
     ports:
       - "${MONGO_PORT}:27017"
     volumes:
